@@ -1,12 +1,10 @@
+from chess_tournament import Game, Player, RandomPlayer
 import chess
 import random
 import re
 import torch
 from typing import Optional
 from transformers import AutoTokenizer, AutoModelForCausalLM
-
-from chess_tournament.players import Player
-
 
 class TransformerPlayer(Player):
     """
@@ -21,7 +19,7 @@ class TransformerPlayer(Player):
     def __init__(
         self,
         name: str = "TinyLMPlayer",
-        model_id: str = "HuggingFaceTB/SmolLM2-135M-Instruct",
+        model_id: str = "Qwen/Qwen2.5-0.5B-Instruct", #Qwen/Qwen2.5-1.5B-Instruct" #"HuggingFaceTB/SmolLM2-135M-Instruct"
         temperature: float = 0.7,
         max_new_tokens: int = 8,
     ):
@@ -56,7 +54,19 @@ class TransformerPlayer(Player):
     # Prompt
     # -------------------------
     def _build_prompt(self, fen: str) -> str:
-        return f"FEN: {fen}\nMove:"
+        # Giving the board info and legal moves to the prompt in advance so that it can pick from the legal options
+        board = chess.Board(fen)
+        legal_moves = [move.uci() for move in board.legal_moves]
+        legal_moves_str = ", ".join(legal_moves)
+
+        return f"""You are an expert chess player. 
+        You are given a chess position in FEN notation and a list of legal moves. 
+        Choose the best legal move from the legal moves list.
+        Output the only the move in UCI format (example: e2e4), nothing else.
+
+        FEN: {fen}
+        Legal moves: {legal_moves_str}
+        Best move:"""
 
     def _extract_move(self, text: str) -> Optional[str]:
         match = self.UCI_REGEX.search(text)
@@ -99,7 +109,11 @@ class TransformerPlayer(Player):
             move = self._extract_move(decoded)
 
             if move:
-                return move
+              try: # added this
+                if chess.Move.from_uci(move) in chess.Board(fen).legal_moves: # added this
+                  return move
+              except: # added this
+                pass # added this
 
         except Exception:
             pass
