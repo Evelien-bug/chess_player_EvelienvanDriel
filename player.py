@@ -6,14 +6,6 @@ import torch
 from typing import Optional
 from transformers import AutoTokenizer, AutoModelForCausalLM
 
-import chess
-import random
-import re
-import torch
-from typing import Optional
-from transformers import AutoTokenizer, AutoModelForCausalLM
-from chess_tournament.players import Player
-
 
 class TransformerPlayer(Player):
     """
