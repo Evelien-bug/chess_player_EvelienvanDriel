@@ -138,7 +138,7 @@ Best move:"""
     
     def _endgame(self, board: chess.Board) -> bool:
         """
-        I defined endgame as: opponent has two or fewer pieces left besides pawns and a king.
+        I defined endgame as: opponent has one or zero pieces left besides pawns and a king.
         Function:
         - checks how many pieces the opponent has left 
         """
@@ -146,7 +146,7 @@ Best move:"""
         return sum(
             len(board.pieces(pt, opponent))
             for pt in [chess.QUEEN, chess.ROOK, chess.BISHOP, chess.KNIGHT]
-        ) <= 2
+        ) <= 1
 
     
     def _endgame_move(self, board: chess.Board) -> Optional[str]:
@@ -172,6 +172,11 @@ Best move:"""
 
             # never stalemate the opponent 
             if board.is_stalemate():
+                board.pop()
+                continue
+
+            # avoid repeating positions
+            if board.is_repetition(2):
                 board.pop()
                 continue
 
