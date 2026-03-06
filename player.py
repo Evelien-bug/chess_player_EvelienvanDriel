@@ -41,6 +41,10 @@ class TransformerPlayer(Player):
         self.tokenizer = None
         self.model = None
 
+        # seen positions
+        self.seen_positions = []  # list of the seen positions
+        self.seen_positions_window = 6  # remembering last 6 positions
+
 
     # -------------------------
     # Lazy loading
@@ -111,7 +115,7 @@ Best move:"""
             # finding the lowest value piece the opponent can attack with
             min_attacker_value = 99
             # looping over all attackers
-            for attacker_sq in board.attackers(board.turn, to_square): 
+            for attacker_sq in board.attackers(board.turn, to_square):
                 attacker = board.piece_at(attacker_sq) # selecting attacker
                 if attacker:
                     val = self.piece_values.get(attacker.piece_type, 0) # getting the piece value
@@ -135,12 +139,12 @@ Best move:"""
     I saw patterns in the game log of pieces moving back and forth when the opponent only had his king (and a only few other pieces) left, causing a draw.
     Because of this, i defined endgame functions below.
     """
-    
+
     def _endgame(self, board: chess.Board) -> bool:
         """
         I defined endgame as: opponent has one or zero pieces left besides pawns and a king.
         Function:
-        - checks how many pieces the opponent has left 
+        - checks how many pieces the opponent has left
         """
         opponent = not board.turn
         return sum(
@@ -148,7 +152,7 @@ Best move:"""
             for pt in [chess.QUEEN, chess.ROOK, chess.BISHOP, chess.KNIGHT]
         ) <= 1
 
-    
+
     def _endgame_move(self, board: chess.Board) -> Optional[str]:
         """
         Endgame strategy.
@@ -170,13 +174,14 @@ Best move:"""
                 board.pop()
                 return move.uci()
 
-            # never stalemate the opponent 
+            # never stalemate the opponent
             if board.is_stalemate():
                 board.pop()
                 continue
 
-            # avoid repeating positions
-            if board.is_repetition(2):
+            # dont want repetition of moves (i saw lots of repeating steps in the game logs)
+            position_key = board.fen().split(' ')[0] # the piece positions
+            if position_key in self.seen_positions: # skipping if we did thid move in the 6 latest moves
                 board.pop()
                 continue
 
@@ -190,8 +195,15 @@ Best move:"""
             board.pop()
 
             # updating best move
-            if score > best_score: 
+            if score > best_score:
                 best_score, best_move = score, move
+
+        if best_move:
+            board.push(best_move) # temporarily making the best move
+            self.seen_positions.append(board.fen().split(' ')[0]) # adding to memory
+            if len(self.seen_positions) > self.seen_positions_window: # stopping if window is full
+                self.seen_positions.pop(0)
+            board.pop()
 
         return best_move.uci() if best_move else None
 
@@ -244,8 +256,9 @@ Best move:"""
                 captured = board.piece_at(move.to_square)
                 # if captured piece has a higher value: updating best value
                 if captured and self.piece_values.get(captured.piece_type, 0) > best_value:
-                    best_value = self.piece_values[captured.piece_type]
-                    best_capture = move # updating best capture 
+                    if self._safe_move(board, move): # only if safe
+                        best_value = self.piece_values[captured.piece_type]
+                        best_capture = move # updating best capture
         if best_capture:
             return best_capture.uci()
 
