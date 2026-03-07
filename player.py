@@ -11,7 +11,7 @@ class TransformerPlayer(Player):
     Transformer-based chess player with rule-based filters.
 
     Architecture:
-        1. _critical_move()     before using model, check: checkmate in 1, pawn promotion to queen
+        1. _critical_move()     before using model, check: checkmate in 1, pawn promotion to queen, endgame function
         2. model (x3 retries)   move selection by finetuned model
         3. _safe_move()         rejecting model moves that lead to capturing of own pieces
         4. _heuristic_move()    safety-net if the model fails
@@ -181,7 +181,7 @@ Best move:"""
 
             # dont want repetition of moves (i saw lots of repeating steps in the game logs)
             position_key = board.fen().split(' ')[0] # the piece positions
-            if position_key in self.seen_positions: # skipping if we did thid move in the 6 latest moves
+            if position_key in self.seen_positions: # skipping if we did this move in the 6 latest moves
                 board.pop()
                 continue
 
