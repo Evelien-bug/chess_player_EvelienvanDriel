@@ -26,7 +26,7 @@ class TransformerPlayer(Player):
         self,
         name: str = "TinyLMPlayer",
         model_id: str = "EvelienUU/chess-qwen-finetuned-v2", # finetuned model from HuggingFace
-        temperature: float = 0.1, # lowered the temp
+        temperature: float = 0.4, # lowered the temp
         max_new_tokens: int = 8,
     ):
         super().__init__(name)
@@ -334,9 +334,6 @@ Best move:"""
 
         except Exception:
             pass
-
-        # Step 5: Model failed or kept suggesting unsafe moves: heuristics
-        return self._heuristic_move(fen)
 
         # Step 5: Model failed or kept suggesting unsafe moves: heuristics
         return self._heuristic_move(fen)
