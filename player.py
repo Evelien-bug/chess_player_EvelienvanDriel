@@ -337,3 +337,6 @@ Best move:"""
 
         # Step 5: Model failed or kept suggesting unsafe moves: heuristics
         return self._heuristic_move(fen)
+
+        # Step 5: Model failed or kept suggesting unsafe moves: heuristics
+        return self._heuristic_move(fen)
