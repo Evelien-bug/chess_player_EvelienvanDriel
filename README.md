@@ -1,6 +1,8 @@
 # Chess Transformer Player
 
-Return: UCI move string (e2e4) OR None
+This is a chess player that combines a finetuned transformer language model with rule-based heuristics 
+to select moves. The model is prompted with the current board position (FEN) and a list of 
+legal moves, and outputs the best move in UCI format.
 
 ## Model
 - Base model: Qwen2.5-0.5B-Instruct
